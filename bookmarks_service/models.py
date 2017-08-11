@@ -14,7 +14,7 @@ class User(Base):
     api_key = Column(String(24), unique=True)
     secret = Column(String(60), nullable=False)
 
-    bookmarks = relationship("Bookmark", back_populates="users")
+    bookmarks = relationship("Bookmark", back_populates="user")
 
     def __init__(self, name, email, secret):
         self.name = name
@@ -32,6 +32,8 @@ class Bookmark(Base):
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship("User", back_populates="bookmarks")
+
+    requests = relationship("Request", back_populates="bookmark")
 
     def __init__(self, id, url, user_id):
         self.id = id
