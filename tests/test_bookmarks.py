@@ -26,6 +26,10 @@ class BookmarksTestCase(unittest.TestCase):
         rv = self.app.get('/bookmarks/')
         self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
 
+    # Test for no users
+    def test_no_users(self):
+        rv = self.app.get('/users/')
+        self.assertIn(b'{\n  "users": []\n}\n', rv.data)
 
 
 if __name__ == '__main__':
