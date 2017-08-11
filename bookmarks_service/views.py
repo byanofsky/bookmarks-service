@@ -12,4 +12,7 @@ TIMEOUT = app.config['TIMEOUT']
 
 @app.route('/', methods=['GET'])
 def front_page():
-    return 'Good'
+    return (
+        'Welcome to the bookmarks web service API. '
+        'More info will be added here in the future in case you are lost.'
+    )

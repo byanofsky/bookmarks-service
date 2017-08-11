@@ -17,9 +17,9 @@ class BookmarksTestCase(unittest.TestCase):
             bind=bookmarks_service.database.engine)
 
     # Begin test functions
-    def test_empty_db(self):
+    def test_front_page(self):
         rv = self.app.get('/')
-        assert b'Good' in rv.data
+        assert b'Welcome to the bookmarks web service API.' in rv.data
 
 
 if __name__ == '__main__':
