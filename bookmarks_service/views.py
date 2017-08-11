@@ -31,7 +31,7 @@ def _bookmarks():
 @app.route('/users/', methods=['GET', 'POST'])
 def users():
     if request.method == 'GET':
-        # Get all users
+        # Query users and return
         users = User.query.all()
         return jsonify(users=users)
     return 'Next steps'
