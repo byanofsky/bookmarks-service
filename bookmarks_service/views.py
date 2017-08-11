@@ -1,4 +1,5 @@
 from flask import jsonify
+from flask import jsonify, request
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
@@ -27,3 +28,10 @@ def _bookmarks():
     if not bookmarks:
         return jsonify(bookmarks=[])
     return 'Something soon'
+@app.route('/users/', methods=['GET', 'POST'])
+def users():
+    if request.method == 'GET':
+        # Get all users
+        users = User.query.all()
+        return jsonify(users=users)
+    return 'Next steps'
