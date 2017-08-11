@@ -19,12 +19,13 @@ class BookmarksTestCase(unittest.TestCase):
     # Begin test functions
     def test_front_page(self):
         rv = self.app.get('/')
-        assert b'Welcome to the bookmarks web service API.' in rv.data
+        self.assertIn(b'Welcome to the bookmarks web service API.', rv.data)
 
     # Test for no bookmarks
     def test_no_bookmarks(self):
         rv = self.app.get('/bookmarks/')
-        assert b'{\n  "bookmarks": []\n}\n' in rv.data
+        self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
+
 
 
 if __name__ == '__main__':
