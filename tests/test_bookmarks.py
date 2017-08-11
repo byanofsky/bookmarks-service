@@ -28,8 +28,11 @@ class BookmarksTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # Make sure we are in testing environment, then switch back
-    cur_app_env = os.environ.get('APPLICATION_ENVIRONMENT')
-    os.environ['APPLICATION_ENVIRONMENT'] = 'testing'
-    unittest.main()
-    os.environ['APPLICATION_ENVIRONMENT'] = cur_app_env
+    # Make sure we are in testing mode and testing env
+    app_env = os.environ.get('APPLICATION_ENVIRONMENT')
+    if (bookmarks_service.app.config['TESTING'] is True and
+            app_env == 'testing'):
+            unittest.main()
+    else:
+        print('Need to be in a testing environment. ' +
+              'Set APPLICATION_ENVIRONMENT to testing.')
