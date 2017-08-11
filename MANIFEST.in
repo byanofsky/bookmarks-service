@@ -1,2 +1,2 @@
-graft bookmarks-service/templates
-graft bookmarks-service/static
+graft bookmarks_service/templates
+graft bookmarks_service/static
