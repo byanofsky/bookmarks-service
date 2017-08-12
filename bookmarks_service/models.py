@@ -24,6 +24,13 @@ class User(Base):
     def __repr__(self):
         return '<User %r>' % (self.name)
 
+    def json(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email
+        }
+
 
 class Bookmark(Base):
     __tablename__ = 'bookmarks'
