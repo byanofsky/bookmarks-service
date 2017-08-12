@@ -56,6 +56,21 @@ class BookmarksTestCase(unittest.TestCase):
             'User post request without data should return "Bad Request"'
         )
 
+    # Test attempt to create user with email that exists
+    def test_create_user_that_exists(self):
+        # Create a user
+        self.test_create_user()
+        rv = self.app.post('/users', data={
+            'name': 'Brandon Yanofsky',
+            'email': 'byanofsky@me.com'
+        })
+        self.assertEqual(rv.status_code, 409)
+        self.assertIn(
+            b'"error": "Conflict"',
+            rv.data,
+            'Adding a user with email that exists should return 409 error'
+        )
+
 
 if __name__ == '__main__':
     # Make sure we are in testing mode and testing env
