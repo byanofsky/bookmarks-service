@@ -13,6 +13,11 @@ USER_AGENT = '{}/{}'.format(
 TIMEOUT = app.config['TIMEOUT']
 
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
+
+
 @app.route('/', methods=['GET'])
 def front_page():
     return (
