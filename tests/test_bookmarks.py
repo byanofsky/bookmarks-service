@@ -31,6 +31,31 @@ class BookmarksTestCase(unittest.TestCase):
         rv = self.app.get('/users')
         self.assertIn(b'{\n  "users": []\n}\n', rv.data)
 
+    # Test creating a new user
+    def test_create_user(self):
+        # Create user
+        rv = self.app.post('/users', data={
+            'name': 'Brandon Yanofsky',
+            'email': 'byanofsky@me.com'
+        })
+        self.assertEqual(rv.status_code, 201)
+        self.assertIn(
+            b'"email": "byanofsky@me.com",',
+            rv.data,
+            'User not successfully created'
+        )
+
+    # Test attempt to create user without passing data
+    def test_create_user_no_data(self):
+        # Attempt to create a user without passing data
+        rv = self.app.post('/users')
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'"error": "Bad Request"',
+            rv.data,
+            'User post request without data should return "Bad Request"'
+        )
+
 
 if __name__ == '__main__':
     # Make sure we are in testing mode and testing env
