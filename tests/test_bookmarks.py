@@ -23,12 +23,12 @@ class BookmarksTestCase(unittest.TestCase):
 
     # Test for no bookmarks
     def test_no_bookmarks(self):
-        rv = self.app.get('/bookmarks/')
+        rv = self.app.get('/bookmarks')
         self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
 
     # Test for no users
     def test_no_users(self):
-        rv = self.app.get('/users/')
+        rv = self.app.get('/users')
         self.assertIn(b'{\n  "users": []\n}\n', rv.data)
 
 
