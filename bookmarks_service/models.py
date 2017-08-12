@@ -16,13 +16,13 @@ class User(Base):
 
     bookmarks = relationship("Bookmark", back_populates="user")
 
-    def __init__(self, name, email, secret):
+    def __init__(self, name, email):
         self.name = name
         self.email = email
-        self.secret = secret
+        self.secret = 'test secret'
 
     def __repr__(self):
-        return '<User %r>' % (self.username)
+        return '<User %r>' % (self.name)
 
 
 class Bookmark(Base):
