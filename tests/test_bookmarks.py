@@ -21,11 +21,6 @@ class BookmarksTestCase(unittest.TestCase):
         rv = self.app.get('/')
         self.assertIn(b'Welcome to the bookmarks web service API.', rv.data)
 
-    # Test for no bookmarks
-    def test_no_bookmarks(self):
-        rv = self.app.get('/bookmarks')
-        self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
-
     # Test for no users
     def test_no_users(self):
         rv = self.app.get('/users')
@@ -70,6 +65,11 @@ class BookmarksTestCase(unittest.TestCase):
             rv.data,
             'Adding a user with email that exists should return 409 error'
         )
+
+    # Test for no bookmarks
+    def test_no_bookmarks(self):
+        rv = self.app.get('/bookmarks')
+        self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
 
 
 if __name__ == '__main__':
