@@ -1,6 +1,7 @@
 import os
 import re
 import unittest
+import json
 
 import bookmarks_service
 
@@ -22,6 +23,16 @@ class BookmarksTestCase(unittest.TestCase):
             'name': name,
             'email': email
         })
+        return rv
+
+    def create_bookmark(self, url, user_id, follow_redirects=None):
+        data = {
+            'url': url,
+            'user_id': user_id
+        }
+        if follow_redirects:
+            data['follow_redirects'] = follow_redirects
+        rv = self.app.post('/bookmarks', data=data)
         return rv
 
     # Begin test functions
@@ -74,6 +85,37 @@ class BookmarksTestCase(unittest.TestCase):
         rv = self.app.get('/bookmarks')
         self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
 
+    # Test to create bookmark
+    def test_add_bookmark(self):
+        # Create a new user
+        rv = self.create_user('Brandon', 'byanofsky@me.com')
+        user = json.loads(rv.data.decode())['user']
+        user_id = user['id']
+        # Create a bookmark that does not follow redirects
+        url = 'http://www.google.com'
+        rv = self.create_bookmark(url, user_id)
+        self.assertEqual(rv.status_code, 201)
+        self.assertIn(
+            ('"url": "{}/"').format(url).encode(),
+            rv.data,
+            'Bookmark not created properly'
+        )
+
+    # Test to create bookmarks that follow redirects
+    def test_add_bookmark_follow_redirects(self):
+        # Create a new user
+        rv = self.create_user('Brandon', 'byanofsky@me.com')
+        user = json.loads(rv.data.decode())['user']
+        user_id = user['id']
+        # Create a bookmark that should follow redirects
+        url = 'http://google.com'
+        rv = self.create_bookmark(url, user_id, follow_redirects='True')
+        self.assertEqual(rv.status_code, 201)
+        self.assertIn(
+            ('"url": "http://www.google.com/"').format(url).encode(),
+            rv.data,
+            'Bookmark (follow_redirects) not created properly'
+        )
 
 if __name__ == '__main__':
     # Make sure we are in testing mode and testing env
