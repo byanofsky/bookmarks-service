@@ -69,18 +69,18 @@ def bookmarks():
             r.raise_for_status()
         # Catch request exceptions
         except requests.exceptions.RequestException as e:
-            error_type = type(e)
             # Customize error message to request exception
-            if error_type is requests.exceptions.HTTPError:
+            if isinstance(e, requests.exceptions.HTTPError):
                 msg = str(e)
-            elif error_type is requests.exceptions.Timeout:
+            elif isinstance(e, requests.exceptions.Timeout):
                 msg = ('Timeout error. Please try again. If error continues, '
                        'please check that submitted url is correct.')
-            elif error_type is requests.exceptions.ConnectionError:
+            elif isinstance(e, requests.exceptions.ConnectionError):
                 msg = ('Could not connect to your url. '
                        'Please check that url is correct. ' + str(e))
-            elif error_type is requests.exceptions.TooManyRedirects:
-                msg = ('Exceeded max number of redirects when connecting to url. Please check URL.')
+            elif isinstance(e, requests.exceptions.TooManyRedirects):
+                msg = ('Exceeded max number of redirects when connecting to '
+                       'url. Please check URL.')
             else:
                 msg = str(e)
             return (jsonify(
