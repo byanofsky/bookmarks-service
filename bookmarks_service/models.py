@@ -44,7 +44,7 @@ class Bookmark(Base):
 
     def __init__(self, id, url, user_id):
         self.id = id
-        self.link = link
+        self.url = url
         self.user_id = user_id
 
     def __repr__(self):
