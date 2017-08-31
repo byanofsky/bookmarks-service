@@ -80,7 +80,7 @@ if __name__ == '__main__':
     app_env = os.environ.get('APPLICATION_ENVIRONMENT')
     if (bookmarks_service.app.config['TESTING'] is True and
             app_env == 'testing'):
-            unittest.main()
+            unittest.main(verbosity=2)
     else:
         print('Need to be in a testing environment. ' +
               'Set APPLICATION_ENVIRONMENT to testing.')
