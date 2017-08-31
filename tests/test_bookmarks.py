@@ -85,6 +85,13 @@ class UsersTestCase(BaseTestCase):
 
 
 class BookmarksTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+        # Create a new user
+        rv = self.create_user('Brandon', 'byanofsky@me.com')
+        self.user = json.loads(rv.data.decode())['user']
+        self.user_id = self.user['id']
+
     # Test for no bookmarks
     def test_no_bookmarks(self):
         rv = self.app.get('/bookmarks')
@@ -92,32 +99,24 @@ class BookmarksTestCase(BaseTestCase):
 
     # Test to create bookmark
     def test_add_bookmark(self):
-        # Create a new user
-        rv = self.create_user('Brandon', 'byanofsky@me.com')
-        user = json.loads(rv.data.decode())['user']
-        user_id = user['id']
         # Create a bookmark that does not follow redirects
         url = 'http://www.google.com'
-        rv = self.create_bookmark(url, user_id)
+        rv = self.create_bookmark(url, self.user_id)
         self.assertEqual(rv.status_code, 201)
         self.assertIn(
-            ('"url": "{}/"').format(url).encode(),
+            b'"url": "http://www.google.com/"',
             rv.data,
             'Bookmark not created properly'
         )
 
     # Test to create bookmarks that follow redirects
     def test_add_bookmark_follow_redirects(self):
-        # Create a new user
-        rv = self.create_user('Brandon', 'byanofsky@me.com')
-        user = json.loads(rv.data.decode())['user']
-        user_id = user['id']
         # Create a bookmark that should follow redirects
         url = 'http://google.com'
-        rv = self.create_bookmark(url, user_id, follow_redirects='True')
+        rv = self.create_bookmark(url, self.user_id, follow_redirects='True')
         self.assertEqual(rv.status_code, 201)
         self.assertIn(
-            ('"url": "http://www.google.com/"').format(url).encode(),
+            b'"url": "http://www.google.com/"',
             rv.data,
             'Bookmark (follow_redirects) not created properly'
         )
