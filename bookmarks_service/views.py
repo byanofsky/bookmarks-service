@@ -25,21 +25,17 @@ def front_page():
     )
 
 
-@app.route('/bookmarks/', methods=['GET'])
-def _bookmarks():
-    # Get all bookmarks
-    bookmarks = Bookmark.query.all()
-    if not bookmarks:
-        return jsonify(bookmarks=[])
-    return 'Something soon'
-@app.route('/users/', methods=['GET', 'POST'])
-def users():
+@app.route('/bookmarks', methods=['GET', 'POST'])
+def bookmarks():
     if request.method == 'GET':
-        # Query users and return
-        users = User.query.all()
-        return jsonify(users=users)
-    return 'Next steps'
-@app.route('/users', methods=['GET', 'POST'])
+        # Get all bookmarks
+        bookmarks = Bookmark.query.all()
+        return jsonify(bookmarks=bookmarks)
+    else:
+        return 'Create new bookmark'
+
+
+@app.route('/users', methods=['GET', 'POST', 'PUT'])
 def users():
     if request.method == 'POST':
         # Get data
