@@ -65,6 +65,7 @@ def users():
                 user=u.json()
             )
         )
+        # Provide location of user resource
         response.headers['Location'] = '/users/{}'.format(u.id)
         return response, 201
     # Query users and return
