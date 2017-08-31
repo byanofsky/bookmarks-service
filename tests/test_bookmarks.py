@@ -6,7 +6,7 @@ import json
 import bookmarks_service
 
 
-class BookmarksTestCase(unittest.TestCase):
+class BaseTestCase(unittest.TestCase):
     # Setup and teardown functions
     def setUp(self):
         self.app = bookmarks_service.app.test_client()
@@ -35,11 +35,14 @@ class BookmarksTestCase(unittest.TestCase):
         rv = self.app.post('/bookmarks', data=data)
         return rv
 
-    # Begin test functions
+
+class GeneralTestCase(BaseTestCase):
     def test_front_page(self):
         rv = self.app.get('/')
         self.assertIn(b'Welcome to the bookmarks web service API.', rv.data)
 
+
+class UsersTestCase(BaseTestCase):
     # Test for no users
     def test_no_users(self):
         rv = self.app.get('/users')
@@ -80,6 +83,8 @@ class BookmarksTestCase(unittest.TestCase):
             'Adding a user with email that exists should return 409 error'
         )
 
+
+class BookmarksTestCase(BaseTestCase):
     # Test for no bookmarks
     def test_no_bookmarks(self):
         rv = self.app.get('/bookmarks')
