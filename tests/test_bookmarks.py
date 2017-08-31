@@ -121,6 +121,67 @@ class BookmarksTestCase(BaseTestCase):
             'Bookmark (follow_redirects) not created properly'
         )
 
+    # Test add bookmark errors
+    def test_add_bookmark_errors(self):
+        # Check error when URL & user_id empty
+        rv = self.create_bookmark(None, None)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'url and user_id are required:',
+            rv.data,
+            'Failed test when url and user_id empty'
+        )
+        # Check error when URL empty
+        rv = self.create_bookmark(None, self.user_id)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'url and user_id are required:',
+            rv.data,
+            'Failed test when url is empty'
+        )
+        # Check error when user_id empty
+        rv = self.create_bookmark('http://google.com', None)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'url and user_id are required:',
+            rv.data,
+            'Failed test when user_id is empty'
+        )
+        # Check error when user_id does not exist
+        rv = self.create_bookmark('http://google.com', 50)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'No user exists with user_id=50',
+            rv.data,
+            'Failed test when user does not exist'
+        )
+        # Check error when url has HTTPError
+        rv = self.create_bookmark('http://google.com/testing', self.user_id)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'404 Client Error',
+            rv.data,
+            'Failed test when url test has HTTPError'
+        )
+        # Check error when url has Timeout
+        rv = self.create_bookmark('http://github.com:81', self.user_id)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'Timeout error. Please try again.',
+            rv.data,
+            'Failed test when url test has Timeout'
+        )
+        # Check error when url has Connection Error
+        rv = self.create_bookmark('http://googlecom', self.user_id)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'Could not connect to your url',
+            rv.data,
+            'Failed test when url test Connection Error'
+        )
+        # Check error when url has TooManyRedirects
+        # TODO: find way to simulate too many redirects error
+
 if __name__ == '__main__':
     # Make sure we are in testing mode and testing env
     app_env = os.environ.get('APPLICATION_ENVIRONMENT')
