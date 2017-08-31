@@ -114,7 +114,7 @@ def bookmarks():
         return response, 201
     # Get all bookmarks
     bookmarks = Bookmark.query.all()
-    return jsonify(bookmarks=bookmarks)
+    return jsonify(bookmarks=[b.json() for b in bookmarks])
 
 
 @app.route('/users', methods=['GET', 'POST'])
