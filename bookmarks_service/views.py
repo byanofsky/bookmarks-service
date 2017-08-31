@@ -1,3 +1,7 @@
+import requests
+import random
+import string
+
 from flask import abort, jsonify, make_response, request
 
 from bookmarks_service import app
@@ -27,12 +31,90 @@ def front_page():
 
 @app.route('/bookmarks', methods=['GET', 'POST'])
 def bookmarks():
-    if request.method == 'GET':
-        # Get all bookmarks
-        bookmarks = Bookmark.query.all()
-        return jsonify(bookmarks=bookmarks)
-    else:
-        return 'Create new bookmark'
+    if request.method == 'POST':
+        # Get data
+        url = request.form.get('url')
+        user_id = request.form.get('user_id')
+        follow_redirects = request.form.get('follow_redirects') == 'True'
+        # Verify required data sent
+        if not (url and user_id):
+            msg = 'url and user_id are required: (url={}, user_id={})'.format(
+                url,
+                user_id
+            )
+            return (jsonify(
+                error='Bad Request',
+                code='400',
+                message=msg
+            ), 400)
+        # Verify user_id exists
+        if not User.query.get(user_id):
+            return (jsonify(
+                error='Bad Request',
+                code='400',
+                message='No user exists with user_id={}'.format(user_id)
+            ), 400)
+        # Verify URL
+        try:
+            user_agent = '{}/{}'.format(
+                app.config['USER_AGENT_NAME'],
+                app.config['VERSION_NUMBER']
+            )
+            r = requests.get(
+                url,
+                headers={'user-agent': user_agent},
+                allow_redirects=follow_redirects,
+                timeout=app.config['TIMEOUT']
+            )
+            r.raise_for_status()
+        # Catch request exceptions
+        except requests.exceptions.RequestException as e:
+            error_type = type(e)
+            # Customize error message to request exception
+            if error_type is requests.exceptions.HTTPError:
+                msg = str(e)
+            elif error_type is requests.exceptions.Timeout:
+                msg = ('Timeout error. Please try again. If error continues, '
+                       'please check that submitted url is correct.')
+            elif error_type is requests.exceptions.ConnectionError:
+                msg = ('Could not connect to your url. '
+                       'Please check that url is correct. ' + str(e))
+            elif error_type is requests.exceptions.TooManyRedirects:
+                msg = ('Exceeded max number of redirects when connecting to url. Please check URL.')
+            else:
+                msg = str(e)
+            return (jsonify(
+                error='Bad Request',
+                code='400',
+                message='Error when connecting to submitted url: ' + msg
+            ), 400)
+        else:
+            # If url success, get final url (important for redirects)
+            url = r.url
+        # Successfully verified, time to create bookmark.
+        # Generate random 6 character alphanumeric id
+        while True:
+            b_id = ''.join(random.choice(
+                string.ascii_lowercase + string.digits) for _ in range(6))
+            # Check that id does not exist
+            if Bookmark.query.get(b_id) is None:
+                break
+        # Create bookmark in database
+        b = Bookmark(b_id, url, user_id)
+        db_session.add(b)
+        db_session.commit()
+        # Craft response
+        response = make_response(
+            jsonify(
+                bookmark=b.json()
+            )
+        )
+        # Provide location of user resource
+        response.headers['Location'] = '/bookmarks/{}'.format(b.id)
+        return response, 201
+    # Get all bookmarks
+    bookmarks = Bookmark.query.all()
+    return jsonify(bookmarks=bookmarks)
 
 
 @app.route('/users', methods=['GET', 'POST'])
