@@ -35,7 +35,7 @@ def bookmarks():
         return 'Create new bookmark'
 
 
-@app.route('/users', methods=['GET', 'POST', 'PUT'])
+@app.route('/users', methods=['GET', 'POST'])
 def users():
     if request.method == 'POST':
         # Get data
