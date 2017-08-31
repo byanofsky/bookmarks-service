@@ -50,6 +50,13 @@ class Bookmark(Base):
     def __repr__(self):
         return '<Bookmark %r>' % (self.id)
 
+    def json(self):
+        return {
+            'id': self.id,
+            'url': self.url,
+            'user_id': self.user_id
+        }
+
 
 class Request(Base):
     __tablename__ = 'requests'
