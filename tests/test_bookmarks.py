@@ -16,6 +16,14 @@ class BookmarksTestCase(unittest.TestCase):
         bookmarks_service.database.Base.metadata.drop_all(
             bind=bookmarks_service.database.engine)
 
+    # Helper functions for tests
+    def create_user(self, name, email):
+        rv = self.app.post('/users', data={
+            'name': name,
+            'email': email
+        })
+        return rv
+
     # Begin test functions
     def test_front_page(self):
         rv = self.app.get('/')
@@ -29,10 +37,7 @@ class BookmarksTestCase(unittest.TestCase):
     # Test creating a new user
     def test_create_user(self):
         # Create user
-        rv = self.app.post('/users', data={
-            'name': 'Brandon Yanofsky',
-            'email': 'byanofsky@me.com'
-        })
+        rv = self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
         self.assertEqual(rv.status_code, 201)
         self.assertIn(
             b'"email": "byanofsky@me.com",',
@@ -54,11 +59,9 @@ class BookmarksTestCase(unittest.TestCase):
     # Test attempt to create user with email that exists
     def test_create_user_that_exists(self):
         # Create a user
-        self.test_create_user()
-        rv = self.app.post('/users', data={
-            'name': 'Brandon Yanofsky',
-            'email': 'byanofsky@me.com'
-        })
+        self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
+        # Create user with same email address
+        rv = self.create_user('Brandon Yanofsky 2', 'byanofsky@me.com')
         self.assertEqual(rv.status_code, 409)
         self.assertIn(
             b'"error": "Conflict"',
