@@ -1,8 +1,9 @@
-import requests
 import random
+import re
 import string
 
 from flask import abort, jsonify, make_response, request
+import requests
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
@@ -115,6 +116,26 @@ def bookmarks():
     # Get all bookmarks
     bookmarks = Bookmark.query.all()
     return jsonify(bookmarks=[b.json() for b in bookmarks])
+
+
+@app.route('/bookmarks/<bookmark_id>', methods=['GET'])
+def single_bookmark(bookmark_id):
+    # Verify bookmark id
+    if not re.fullmatch('^[0-9a-z]{6}$', bookmark_id):
+        return (jsonify(
+            error='Bad Request',
+            code='400',
+            message='Bookmark id must be 6 alphanumeric characters'
+        ), 400)
+    # Query bookmark
+    bookmark = Bookmark.query.get(bookmark_id)
+    if not bookmark:
+        return (jsonify(
+            error='Not Found',
+            code='404',
+            message='There is not bookmark with the id={}'.format(bookmark_id)
+        ), 404)
+    return jsonify(bookmark=bookmark.json())
 
 
 @app.route('/users', methods=['GET', 'POST'])
