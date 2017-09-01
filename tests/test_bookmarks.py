@@ -182,6 +182,47 @@ class BookmarksTestCase(BaseTestCase):
         # Check error when url has TooManyRedirects
         # TODO: find way to simulate too many redirects error
 
+    # Test add and get bookmark
+    def test_add_and_get_bookmark(self):
+        # Create bookmark
+        rv = self.create_bookmark(
+            'http://www.google.com',
+            self.user_id,
+            follow_redirects='True'
+        )
+        self.assertEqual(rv.status_code, 201, msg='Error creating bookmark')
+        # Store returned bookmark location
+        b_url = rv.headers['Location']
+        # Get bookmark
+        rv = self.app.get(b_url)
+        bookmark = json.loads(rv.data.decode())['bookmark']
+        self.assertEqual(rv.status_code, 200, msg='Error retrieving bookmark')
+        self.assertIn(
+            b'"url": "http://www.google.com/"',
+            rv.data,
+            'Bookmark get failed'
+        )
+
+    # Test bookmark retrieval errors
+    def test_get_bookmark_errors(self):
+        # Use incorrect bookmark id format
+        rv = self.app.get('/bookmarks/123')
+        self.assertEqual(rv.status_code, 400, msg='Incorrect status code')
+        self.assertIn(
+            b'Bookmark id must be 6 alphanumeric characters',
+            rv.data,
+            'Bookmark get error message is not correct'
+        )
+        # User bookmark id that does not exist
+        rv = self.app.get('/bookmarks/a1b2c3')
+        self.assertEqual(rv.status_code, 404, msg='Incorrect status code')
+        self.assertIn(
+            b'There is not bookmark with the id=a1b2c3',
+            rv.data,
+            'Bookmark get error message is not correct'
+        )
+
+
 if __name__ == '__main__':
     # Make sure we are in testing mode and testing env
     app_env = os.environ.get('APPLICATION_ENVIRONMENT')
