@@ -174,3 +174,16 @@ def users():
     # Query users and return
     users = User.query.all()
     return jsonify(users=[u.json() for u in users])
+
+
+@app.route('/users/<user_id>', methods=['GET'])
+def single_user(user_id):
+    # Query users
+    user = User.query.get(user_id)
+    if not user:
+        return (jsonify(
+            error='Not Found',
+            code='404',
+            message='There is not a user with the id={}'.format(user_id)
+        ), 404)
+    return jsonify(user=user.json())
