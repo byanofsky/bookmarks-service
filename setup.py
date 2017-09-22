@@ -12,9 +12,6 @@ setup(
         'Flask',
         'SQLalchemy',
         'psycopg2',
-        'Flask-Bcrypt',
-        'Flask-Login',
-        'Flask-WTF',
         'requests'
     ],
 )
