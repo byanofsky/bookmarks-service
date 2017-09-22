@@ -83,6 +83,34 @@ class UsersTestCase(BaseTestCase):
             'Adding a user with email that exists should return 409 error'
         )
 
+    # Test add and get user
+    def test_add_and_get_user(self):
+        # Create user
+        rv = self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
+        self.assertEqual(rv.status_code, 201, msg='Error creating user')
+        # Store returned user location
+        u_url = rv.headers['Location']
+        # Get user
+        rv = self.app.get(u_url)
+        bookmark = json.loads(rv.data.decode())['user']
+        self.assertEqual(rv.status_code, 200, msg='Error retrieving user')
+        self.assertIn(
+            b'"email": "byanofsky@me.com"',
+            rv.data,
+            'User get failed'
+        )
+
+    # Test user retrieval errors
+    def test_get_user_errors(self):
+        # User id that does not exist
+        rv = self.app.get('/users/25')
+        self.assertEqual(rv.status_code, 404, msg='Incorrect status code')
+        self.assertIn(
+            b'There is not a user with the id=25',
+            rv.data,
+            'User get error message is not correct'
+        )
+
 
 class BookmarksTestCase(BaseTestCase):
     def setUp(self):
