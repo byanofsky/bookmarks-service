@@ -11,10 +11,10 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(120))
     email = Column(String(256), unique=True, nullable=False)
-    api_key = Column(String(24), unique=True)
-    secret = Column(String(60), nullable=False)
 
     bookmarks = relationship("Bookmark", back_populates="user")
+
+    api_keys = relationship("API_Key", back_populates="user")
 
     def __init__(self, name, email):
         self.name = name
@@ -30,6 +30,22 @@ class User(Base):
             'name': self.name,
             'email': self.email
         }
+
+
+class API_Key(Base):
+    __tablename__ = 'api_keys'
+    id = Column(String(24), primary_key=True, unique=True, nullable=False)
+    secret = Column(String(60), nullable=False)
+
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="api_keys")
+
+    def __init__(self, id, secret):
+        self.id = id
+        self.secret = secret
+
+    def __repr__(self):
+        return '<API_Key %r>' % (self.id)
 
 
 class Bookmark(Base):
