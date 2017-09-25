@@ -43,7 +43,7 @@ class GeneralTestCase(BaseTestCase):
         self.assertIn(b'Welcome to the bookmarks web service API.', rv.data)
 
 
-class UsersTestCase(BaseTestCase):
+class SuperAdminTestCase(BaseTestCase):
     # Test for no users
     def test_no_users(self):
         rv = self.app.get('/users')
@@ -52,10 +52,14 @@ class UsersTestCase(BaseTestCase):
     # Test creating a new user
     def test_create_user(self):
         # Create user
-        rv = self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
+        rv = self.create_user(
+            'John Smith',
+            'jsmith22@me.com',
+            '64John!Smith45'
+        )
         self.assertEqual(rv.status_code, 201)
         self.assertIn(
-            b'"email": "byanofsky@me.com",',
+            b'"email": "jsmith22@me.com",',
             rv.data,
             'User not successfully created'
         )
@@ -71,46 +75,58 @@ class UsersTestCase(BaseTestCase):
             'User post request without data should return "Bad Request"'
         )
 
-    # Test attempt to create user with email that exists
-    def test_create_user_that_exists(self):
-        # Create a user
-        self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
-        # Create user with same email address
-        rv = self.create_user('Brandon Yanofsky 2', 'byanofsky@me.com')
-        self.assertEqual(rv.status_code, 409)
-        self.assertIn(
-            b'"error": "Conflict"',
-            rv.data,
-            'Adding a user with email that exists should return 409 error'
-        )
+        # Test attempt to create user with email that exists
+        def test_create_user_that_exists(self):
+            # Create a user
+            self.create_user(
+                'John Smith',
+                'jsmith22@me.com',
+                '64John!Smith45'
+            )
+            # Create user with same email address
+            rv = self.create_user(
+                'Joseph A Smith',
+                'jsmith22@me.com',
+                'Joe!Smith22'
+            )
+            self.assertEqual(rv.status_code, 409)
+            self.assertIn(
+                b'"error": "Conflict"',
+                rv.data,
+                'Adding a user with email that exists should return 409 error'
+            )
 
-    # Test add and get user
-    def test_add_and_get_user(self):
-        # Create user
-        rv = self.create_user('Brandon Yanofsky', 'byanofsky@me.com')
-        self.assertEqual(rv.status_code, 201, msg='Error creating user')
-        # Store returned user location
-        u_url = rv.headers['Location']
-        # Get user
-        rv = self.app.get(u_url)
-        bookmark = json.loads(rv.data.decode())['user']
-        self.assertEqual(rv.status_code, 200, msg='Error retrieving user')
-        self.assertIn(
-            b'"email": "byanofsky@me.com"',
-            rv.data,
-            'User get failed'
-        )
+        # Test add and get user
+        def test_add_and_get_user(self):
+            # Create user
+            rv = self.create_user(
+                'John Smith',
+                'jsmith22@me.com',
+                '64John!Smith45'
+            )
+            self.assertEqual(rv.status_code, 201, msg='Error creating user')
+            # Store returned user location
+            u_url = rv.headers['Location']
+            # Get user
+            rv = self.app.get(u_url)
+            bookmark = json.loads(rv.data.decode())['user']
+            self.assertEqual(rv.status_code, 200, msg='Error retrieving user')
+            self.assertIn(
+                b'"email": "jsmith22@me.com"',
+                rv.data,
+                'User get failed'
+            )
 
-    # Test user retrieval errors
-    def test_get_user_errors(self):
-        # User id that does not exist
-        rv = self.app.get('/users/25')
-        self.assertEqual(rv.status_code, 404, msg='Incorrect status code')
-        self.assertIn(
-            b'There is not a user with the id=25',
-            rv.data,
-            'User get error message is not correct'
-        )
+        # Test user retrieval errors
+        def test_get_user_errors(self):
+            # User id that does not exist
+            rv = self.app.get('/users/25')
+            self.assertEqual(rv.status_code, 404, msg='Incorrect status code')
+            self.assertIn(
+                b'There is not a user with the id=25',
+                rv.data,
+                'User get error message is not correct'
+            )
 
 
 class BookmarksTestCase(BaseTestCase):
