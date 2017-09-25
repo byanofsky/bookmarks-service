@@ -129,29 +129,21 @@ def front_page():
 
 
 @app.route('/bookmarks', methods=['GET', 'POST'])
+@auth_required
 def bookmarks():
     if request.method == 'POST':
         # Get data
         url = request.form.get('url')
-        user_id = request.form.get('user_id')
         follow_redirects = request.form.get('follow_redirects') == 'True'
         # Verify required data sent
-        if not (url and user_id):
-            msg = 'url and user_id are required: (url={}, user_id={})'.format(
-                url,
-                user_id
+        if not (url):
+            msg = 'url is required: (url={})'.format(
+                url
             )
             return (jsonify(
                 error='Bad Request',
                 code='400',
                 message=msg
-            ), 400)
-        # Verify user_id exists
-        if not User.query.get(user_id):
-            return (jsonify(
-                error='Bad Request',
-                code='400',
-                message='No user exists with user_id={}'.format(user_id)
             ), 400)
         # Verify URL
         try:
@@ -199,7 +191,7 @@ def bookmarks():
             if Bookmark.query.get(b_id) is None:
                 break
         # Create bookmark in database
-        b = Bookmark(b_id, url, user_id)
+        b = Bookmark(b_id, url, user_id=g.user.id)
         db_session.add(b)
         db_session.commit()
         # Craft response
