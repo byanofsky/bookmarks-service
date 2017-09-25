@@ -11,15 +11,16 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(120))
     email = Column(String(256), unique=True, nullable=False)
+    password_hash = Column(String(60), nullable=False)
 
     bookmarks = relationship("Bookmark", back_populates="user")
 
     api_keys = relationship("API_Key", back_populates="user")
 
-    def __init__(self, name, email):
+    def __init__(self, name, email, password_hash):
         self.name = name
         self.email = email
-        self.secret = 'test secret'
+        self.password_hash = password_hash
 
     def __repr__(self):
         return '<User %r>' % (self.name)

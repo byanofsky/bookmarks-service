@@ -2,8 +2,9 @@ import random
 import re
 import string
 
-from flask import abort, jsonify, make_response, request
+from flask import g, abort, jsonify, make_response, request
 import requests
+import bcrypt
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
@@ -144,8 +145,9 @@ def users():
         # Get data
         name = request.form.get('name')
         email = request.form.get('email')
+        password = request.form.get('password')
         # Verify data sent
-        if not (name and email):
+        if not (name and password and email):
             return (jsonify(
                 error='Bad Request',
                 code='400',
@@ -159,7 +161,12 @@ def users():
                 message='A user with this email already exists'
             ), 409)
         # Create user in database
-        u = User(name=name, email=email)
+        # Hash password
+        password_hash = bcrypt.hashpw(
+            password.encode(),
+            bcrypt.gensalt()
+        ).decode('utf-8')
+        u = User(name, email, password_hash)
         db_session.add(u)
         db_session.commit()
         # Craft response
