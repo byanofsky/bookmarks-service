@@ -60,6 +60,20 @@ def login_required(f):
     return decorated_function
 
 
+def is_authorized(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        assert 'user_id' in kwargs
+        user_id = int(kwargs['user_id'])
+        if not g.user or g.user.id != user_id:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You are not authorized to access this route'
+            ), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def auth_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
