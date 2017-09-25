@@ -64,8 +64,12 @@ def login_required(f):
 def is_authorized(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        assert 'user_id' in kwargs
-        user_id = int(kwargs['user_id'])
+        assert 'user_id' in kwargs or 'bookmark_id' in kwargs
+        if 'user_id' in kwargs:
+            user_id = int(kwargs['user_id'])
+        else:
+            bookmark_id = kwargs.get('bookmark_id')
+            user_id = Bookmark.query.get(bookmark_id).user_id
         if not g.user or g.user.id != user_id:
             return jsonify(
                 error='Unauthorized', code='401',
