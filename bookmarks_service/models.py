@@ -41,12 +41,20 @@ class API_Key(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship("User", back_populates="api_keys")
 
-    def __init__(self, id, secret):
+    def __init__(self, id, secret, user_id):
         self.id = id
         self.secret = secret
+        self.user_id = user_id
 
     def __repr__(self):
         return '<API_Key %r>' % (self.id)
+
+    def json(self):
+        return {
+            'id': self.id,
+            'secret': self.secret,
+            'user_id': self.user_id
+        }
 
 
 class Bookmark(Base):

@@ -9,7 +9,7 @@ import bcrypt
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
-from bookmarks_service.models import User, Bookmark, Request
+from bookmarks_service.models import User, Bookmark, Request, API_Key
 
 # Create user agent for requests
 USER_AGENT = '{}/{}'.format(
@@ -230,3 +230,32 @@ def single_user(user_id):
             message='There is not a user with the id={}'.format(user_id)
         ), 404)
     return jsonify(user=user.json())
+
+
+@app.route('/api_keys', methods=['GET', 'POST'])
+@login_required
+def api_keys():
+    if request.method == 'POST':
+        # Create api key in database
+        # Generate random 24 character alphanumeric id
+        while True:
+            k_id = ''.join(random.choice(
+                string.ascii_lowercase + string.digits) for _ in range(24))
+            # Check that id does not exist
+            if API_Key.query.get(k_id) is None:
+                break
+        secret = ''.join(random.choice(
+            string.ascii_lowercase + string.digits) for _ in range(60))
+        k = API_Key(id=k_id, secret=secret, user_id=g.user.id)
+        db_session.add(k)
+        db_session.commit()
+        # Craft response
+        response = make_response(
+            jsonify(
+                api_key=k.json()
+            )
+        )
+        return response, 201
+    # Query api keys and return
+    api_keys = API_Key.query.filter_by(user_id=g.user.id).all()
+    return jsonify(api_keys=[k.json() for k in api_keys])
