@@ -64,15 +64,14 @@ def login_required(f):
 def is_authorized(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Need user_id or bookmark_id to continue. Should be passed by
-        # view decorator.
-        assert 'user_id' in kwargs or 'bookmark_id' in kwargs
+        # User_ID should be passed from route decorator,
+        # or bookmark should be saved from verifying bookmark
+        assert 'user_id' in kwargs or g.bookmark is not None
         # Get user id directly or from bookmark
         if 'user_id' in kwargs:
             user_id = int(kwargs['user_id'])
         else:
-            bookmark_id = kwargs.get('bookmark_id')
-            user_id = Bookmark.query.get(bookmark_id).user_id
+            user_id = g.bookmark.user_id
         # Check if there is an authenticated user and they are authorized
         if not g.user or g.user.id != user_id:
             return jsonify(
@@ -116,6 +115,33 @@ def auth_required(f):
         g.api_key = api_key
         g.user = api_key.user
         # Continue with function
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def verify_bookmark(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        assert 'bookmark_id' in kwargs
+        bookmark_id = kwargs['bookmark_id']
+        # Verify bookmark id
+        if not re.fullmatch('^[0-9a-z]{6}$', bookmark_id):
+            return (jsonify(
+                error='Bad Request',
+                code='400',
+                message='Bookmark id must be 6 alphanumeric characters'
+            ), 400)
+        # Query bookmark
+        bookmark = Bookmark.query.get(bookmark_id)
+        if not bookmark:
+            return (jsonify(
+                error='Not Found',
+                code='404',
+                message=('There is no bookmark with the id={}'
+                         .format(bookmark_id))
+            ), 404)
+        # Store bookmark
+        g.bookmark = bookmark
         return f(*args, **kwargs)
     return decorated_function
 
@@ -217,23 +243,10 @@ def bookmarks():
 
 @app.route('/bookmarks/<bookmark_id>', methods=['GET'])
 @auth_required
+@verify_bookmark
 @is_authorized
 def single_bookmark(bookmark_id):
-    # Verify bookmark id
-    if not re.fullmatch('^[0-9a-z]{6}$', bookmark_id):
-        return (jsonify(
-            error='Bad Request',
-            code='400',
-            message='Bookmark id must be 6 alphanumeric characters'
-        ), 400)
-    # Query bookmark
-    bookmark = Bookmark.query.get(bookmark_id)
-    if not bookmark:
-        return (jsonify(
-            error='Not Found',
-            code='404',
-            message='There is not bookmark with the id={}'.format(bookmark_id)
-        ), 404)
+    bookmark = g.bookmark
     return jsonify(bookmark=bookmark.json())
 
 
