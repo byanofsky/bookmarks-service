@@ -1,6 +1,4 @@
-import datetime
-
-from sqlalchemy import (Column, Integer, String, Text, ForeignKey, DateTime)
+from sqlalchemy import (Column, Integer, String, Text, ForeignKey)
 from sqlalchemy.orm import relationship
 
 from bookmarks_service.database import Base
