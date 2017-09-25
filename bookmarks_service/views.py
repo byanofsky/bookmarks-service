@@ -59,6 +59,44 @@ def login_required(f):
         # Continue with function
         return f(*args, **kwargs)
     return decorated_function
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            auth = request.authorization
+            api_key_id = request.authorization['username']
+            secret = request.authorization['password']
+        # Catches exception if there is no authorization header or not
+        # formatted as basic authorization
+        except TypeError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a proper authorization header'
+            ), 401
+        # Catches exception if authorization header does not include username
+        # and password
+        except KeyError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a username and password'
+            ), 401
+        api_key = API_Key.query.get(api_key_id)
+        # Check that secret matches api_key secret
+        if api_key.secret != secret:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must be authenticated to access'
+            ), 401
+        # Store user and api key
+        g.api_key = api_key
+        g.user = api_key.user
+        # Continue with function
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @app.route('/', methods=['GET'])
 def front_page():
     return (
