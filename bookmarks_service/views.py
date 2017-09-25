@@ -317,12 +317,12 @@ def api_keys():
         # Generate random 24 character alphanumeric id
         while True:
             k_id = ''.join(random.choice(
-                string.ascii_lowercase + string.digits) for _ in range(24))
+                string.ascii_letters + string.digits) for _ in range(24))
             # Check that id does not exist
             if API_Key.query.get(k_id) is None:
                 break
         secret = ''.join(random.choice(
-            string.ascii_lowercase + string.digits) for _ in range(60))
+            string.ascii_letters + string.digits) for _ in range(60))
         k = API_Key(id=k_id, secret=secret, user_id=g.user.id)
         db_session.add(k)
         db_session.commit()
