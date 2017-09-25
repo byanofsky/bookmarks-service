@@ -63,8 +63,6 @@ class Bookmark(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship("User", back_populates="bookmarks")
 
-    requests = relationship("Request", back_populates="bookmark")
-
     def __init__(self, id, url, user_id):
         self.id = id
         self.url = url
