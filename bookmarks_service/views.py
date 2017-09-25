@@ -46,7 +46,6 @@ def login_required(f):
                 message='You must include a username and password'
             ), 401
         user = User.query.get(user_id)
-        print(user)
         # Check that secret matches api_key secret
         if not bcrypt.checkpw(password.encode('utf-8'),
                               user.password_hash.encode('utf-8')):
