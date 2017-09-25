@@ -9,7 +9,7 @@ import bcrypt
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
-from bookmarks_service.models import User, Bookmark, Request, API_Key
+from bookmarks_service.models import User, Bookmark, API_Key
 
 # Create user agent for requests
 USER_AGENT = '{}/{}'.format(
