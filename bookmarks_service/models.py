@@ -81,21 +81,3 @@ class Bookmark(Base):
             'url': self.url,
             'user_id': self.user_id
         }
-
-
-class Request(Base):
-    __tablename__ = 'requests'
-    id = Column(Integer, primary_key=True, unique=True, nullable=False)
-    ip = Column(String(45))
-    date = Column(DateTime)
-
-    bookmark_id = Column(String(6), ForeignKey('bookmarks.id'))
-    bookmark = relationship("Bookmark", back_populates="requests")
-
-    def __init__(self, ip, date, bookmark_id):
-        self.ip = ip
-        self.date = datetime.datetime.now()
-        self.bookmark_id = bookmark_id
-
-    def __repr__(self):
-        return '<Request %r>' % (self.id)
