@@ -209,7 +209,7 @@ def bookmarks():
         response.headers['Location'] = '/bookmarks/{}'.format(b.id)
         return response, 201
     # Get all bookmarks
-    bookmarks = Bookmark.query.all()
+    bookmarks = Bookmark.query.filter_by(user_id=g.user.id).all()
     return jsonify(bookmarks=[b.json() for b in bookmarks])
 
 
