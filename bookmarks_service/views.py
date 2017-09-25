@@ -147,15 +147,12 @@ def bookmarks():
         follow_redirects = request.form.get('follow_redirects') == 'True'
         # Verify required data sent
         if not (url):
-            msg = 'url is required: (url={})'.format(
-                url
-            )
             return (jsonify(
                 error='Bad Request',
                 code='400',
-                message=msg
+                message='URL is required'
             ), 400)
-        # Verify URL
+        # Verify submitted URL by making request to that URL
         try:
             user_agent = '{}/{}'.format(
                 app.config['USER_AGENT_NAME'],
@@ -201,7 +198,7 @@ def bookmarks():
             if Bookmark.query.get(b_id) is None:
                 break
         # Create bookmark in database
-        b = Bookmark(b_id, url, user_id=g.user.id)
+        b = Bookmark(id=b_id, url=url, user_id=g.user.id)
         db_session.add(b)
         db_session.commit()
         # Craft response
