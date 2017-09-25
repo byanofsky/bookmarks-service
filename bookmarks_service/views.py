@@ -47,8 +47,9 @@ def login_required(f):
             ), 401
         user = User.query.get(user_id)
         # Check that secret matches api_key secret
-        if not bcrypt.checkpw(password.encode('utf-8'),
-                              user.password_hash.encode('utf-8')):
+        if not user or not bcrypt.checkpw(
+                password.encode('utf-8'),
+                user.password_hash.encode('utf-8')):
             return jsonify(
                 error='Unauthorized', code='401',
                 message='You must be authenticated to access'
@@ -97,7 +98,7 @@ def auth_required(f):
             ), 401
         api_key = API_Key.query.get(api_key_id)
         # Check that secret matches api_key secret
-        if api_key.secret != secret:
+        if not api_key or api_key.secret != secret:
             return jsonify(
                 error='Unauthorized', code='401',
                 message='You must be authenticated to access'
