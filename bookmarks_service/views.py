@@ -46,10 +46,10 @@ def login_required(f):
                 message='You must include a username and password'
             ), 401
         user = User.query.get(user_id)
-        # Check that secret matches api_key secret
-        if not user or not bcrypt.checkpw(
-                password.encode('utf-8'),
-                user.password_hash.encode('utf-8')):
+        # Check that user exists and secret matches api_key secret
+        if not (user and bcrypt.checkpw(password.encode('utf-8'),
+                                        user.password_hash.encode('utf-8'))
+                ):
             return jsonify(
                 error='Unauthorized', code='401',
                 message='You must be authenticated to access'
@@ -64,12 +64,16 @@ def login_required(f):
 def is_authorized(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # Need user_id or bookmark_id to continue. Should be passed by
+        # view decorator.
         assert 'user_id' in kwargs or 'bookmark_id' in kwargs
+        # Get user id directly or from bookmark
         if 'user_id' in kwargs:
             user_id = int(kwargs['user_id'])
         else:
             bookmark_id = kwargs.get('bookmark_id')
             user_id = Bookmark.query.get(bookmark_id).user_id
+        # Check if there is an authenticated user and they are authorized
         if not g.user or g.user.id != user_id:
             return jsonify(
                 error='Unauthorized', code='401',
@@ -100,8 +104,9 @@ def auth_required(f):
                 error='Unauthorized', code='401',
                 message='You must include a username and password'
             ), 401
+        # Get api key
         api_key = API_Key.query.get(api_key_id)
-        # Check that secret matches api_key secret
+        # Check that api_key exists and secret matches api_key secret
         if not api_key or api_key.secret != secret:
             return jsonify(
                 error='Unauthorized', code='401',
