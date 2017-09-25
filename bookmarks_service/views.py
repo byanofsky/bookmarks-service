@@ -281,6 +281,8 @@ def users():
 
 
 @app.route('/users/<user_id>', methods=['GET'])
+@login_required
+@is_authorized
 def single_user(user_id):
     # Query users
     user = User.query.get(user_id)
