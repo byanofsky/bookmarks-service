@@ -1,6 +1,7 @@
 import random
 import re
 import string
+from functools import wraps
 
 from flask import g, abort, jsonify, make_response, request
 import requests
@@ -23,6 +24,41 @@ def shutdown_session(exception=None):
     db_session.remove()
 
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            auth = request.authorization
+            user_id = request.authorization['username']
+            password = request.authorization['password']
+        # Catches exception if there is no authorization header or not
+        # formatted as basic authorization
+        except TypeError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a proper authorization header'
+            ), 401
+        # Catches exception if authorization header does not include username
+        # and password
+        except KeyError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a username and password'
+            ), 401
+        user = User.query.get(user_id)
+        print(user)
+        # Check that secret matches api_key secret
+        if not bcrypt.checkpw(password.encode('utf-8'),
+                              user.password_hash.encode('utf-8')):
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must be authenticated to access'
+            ), 401
+        # Store user
+        g.user = user
+        # Continue with function
+        return f(*args, **kwargs)
+    return decorated_function
 @app.route('/', methods=['GET'])
 def front_page():
     return (
