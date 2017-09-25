@@ -18,10 +18,11 @@ class BaseTestCase(unittest.TestCase):
             bind=bookmarks_service.database.engine)
 
     # Helper functions for tests
-    def create_user(self, name, email):
+    def create_user(self, name, email, password):
         rv = self.app.post('/users', data={
             'name': name,
-            'email': email
+            'email': email,
+            'password': password
         })
         return rv
 
