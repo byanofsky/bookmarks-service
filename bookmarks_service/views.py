@@ -214,6 +214,8 @@ def bookmarks():
 
 
 @app.route('/bookmarks/<bookmark_id>', methods=['GET'])
+@auth_required
+@is_authorized
 def single_bookmark(bookmark_id):
     # Verify bookmark id
     if not re.fullmatch('^[0-9a-z]{6}$', bookmark_id):
