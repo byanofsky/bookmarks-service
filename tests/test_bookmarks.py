@@ -200,6 +200,45 @@ class APIKeyTestCase(BaseTestCase):
             '/api_keys',
             headers=self.headers)
         self.assertIn(b'{\n  "api_keys": []\n}\n', rv.data)
+
+    # Test creating an API Key
+    def test_create_api_key(self):
+        rv = self.create_api_key(headers=self.headers)
+        self.assertEqual(rv.status_code, 201)
+        api_key = json.loads(rv.data.decode())['api_key']
+
+    # Test adding a few API keys, but only view API Keys created by user
+    def test_multiple_api_keys(self):
+        # Create 4 API Keys with one user
+        for _ in range(4):
+            self.create_api_key(headers=self.headers)
+        # Check that there are 4 api keys
+        rv = self.app.get(
+            '/api_keys',
+            headers=self.headers
+        )
+        api_keys_1 = json.loads(rv.data.decode())['api_keys']
+        self.assertEqual(len(api_keys_1), 4)
+        # Create 2nd user
+        self.create_user(
+            'Alex Frank',
+            'afrank500@me.com',
+            '123Password!'
+        )
+        # 2nd user header
+        auth_value = "{}:{}".format(2, '123Password!')
+        auth = base64.b64encode(auth_value.encode())
+        header = {'Authorization': b'Basic ' + auth}
+        # Create 2 api keys for user
+        for _ in range(2):
+            self.create_api_key(headers=header)
+        # Check that there are 2 api keys
+        rv = self.app.get(
+            '/api_keys',
+            headers=header
+        )
+        api_keys_2 = json.loads(rv.data.decode())['api_keys']
+        self.assertEqual(len(api_keys_2), 2)
         )
 
 
