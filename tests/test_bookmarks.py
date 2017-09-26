@@ -37,8 +37,8 @@ class BaseTestCase(unittest.TestCase):
         rv = self.app.post('/bookmarks', data=data)
         return rv
 
-    def create_api_key(self):
-        rv = self.app.post('/api_keys')
+    def create_api_key(self, headers):
+        rv = self.app.post('/api_keys', headers=headers)
         return rv
 
 
