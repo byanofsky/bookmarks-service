@@ -31,6 +31,12 @@ class User(Base):
         }
 
 
+class SuperUser(Base):
+    __tablename__ = 'superusers'
+    id = Column(Integer, primary_key=True)
+    password_hash = Column(String(60), nullable=False)
+
+
 class API_Key(Base):
     __tablename__ = 'api_keys'
     id = Column(String(24), primary_key=True, unique=True, nullable=False)
