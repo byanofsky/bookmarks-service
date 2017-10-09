@@ -1,5 +1,6 @@
 from sqlalchemy import (Column, Integer, String, Text, ForeignKey)
 from sqlalchemy.orm import relationship
+import bcrypt
 
 from bookmarks_service.database import Base
 
@@ -35,6 +36,12 @@ class SuperUser(Base):
     __tablename__ = 'superusers'
     id = Column(Integer, primary_key=True)
     password_hash = Column(String(60), nullable=False)
+
+    def __init__(self, password):
+        self.password_hash = bcrypt.hashpw(
+            password.encode(),
+            bcrypt.gensalt()
+        ).decode('utf-8')
 
 
 class API_Key(Base):
