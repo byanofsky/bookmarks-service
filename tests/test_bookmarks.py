@@ -5,6 +5,7 @@ import json
 import base64
 
 import bookmarks_service
+from bookmarks_service.models import SuperUser
 
 
 class BaseTestCase(unittest.TestCase):
@@ -13,6 +14,8 @@ class BaseTestCase(unittest.TestCase):
         self.app = bookmarks_service.app.test_client()
         bookmarks_service.database.init_db()
 
+        self.create_super_user('12345')
+
     def tearDown(self):
         bookmarks_service.database.db_session.remove()
         bookmarks_service.database.Base.metadata.drop_all(
@@ -20,12 +23,26 @@ class BaseTestCase(unittest.TestCase):
 
     # Helper functions for tests
     def create_user(self, name, email, password):
-        rv = self.app.post('/users', data={
-            'name': name,
-            'email': email,
-            'password': password
-        })
+        rv = self.app.post(
+            '/users',
+            data={
+                'name': name,
+                'email': email,
+                'password': password
+            },
+            headers=self.super_user_headers
+        )
         return rv
+
+    def create_super_user(self, password):
+        # Create a super user and create a super user auth header
+        superuser = SuperUser(password)
+        bookmarks_service.database.db_session.add(superuser)
+        bookmarks_service.database.db_session.commit()
+        auth_value = "{}:{}".format(1, '12345')
+        auth = base64.b64encode(auth_value.encode())
+        header = {'Authorization': b'Basic ' + auth}
+        self.super_user_headers = header
 
     def create_bookmark(self, url, follow_redirects=None, headers=None):
         if not headers:
@@ -51,9 +68,18 @@ class GeneralTestCase(BaseTestCase):
 
 
 class SuperAdminTestCase(BaseTestCase):
+    # Test for super user authorization
+    def test_bookmark_auth_required(self):
+        # Test GET without authorization
+        rv = self.app.get('/users')
+        self.assertEqual(rv.status_code, 401)
+        # Test POST without authorization
+        rv = self.app.post('/users')
+        self.assertEqual(rv.status_code, 401)
+
     # Test for no users
     def test_no_users(self):
-        rv = self.app.get('/users')
+        rv = self.app.get('/users', headers=self.super_user_headers)
         self.assertIn(b'{\n  "users": []\n}\n', rv.data)
 
     # Test creating a new user
@@ -74,7 +100,7 @@ class SuperAdminTestCase(BaseTestCase):
     # Test attempt to create user without passing data
     def test_create_user_no_data(self):
         # Attempt to create a user without passing data
-        rv = self.app.post('/users')
+        rv = self.app.post('/users', headers=self.super_user_headers)
         self.assertEqual(rv.status_code, 400)
         self.assertIn(
             b'"error": "Bad Request"',
