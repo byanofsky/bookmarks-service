@@ -27,14 +27,15 @@ class BaseTestCase(unittest.TestCase):
         })
         return rv
 
-    def create_bookmark(self, url, user_id, follow_redirects=None):
+    def create_bookmark(self, url, follow_redirects=None, headers=None):
+        if not headers:
+            headers = self.headers
         data = {
-            'url': url,
-            'user_id': user_id
+            'url': url
         }
         if follow_redirects:
             data['follow_redirects'] = follow_redirects
-        rv = self.app.post('/bookmarks', data=data)
+        rv = self.app.post('/bookmarks', data=data, headers=headers)
         return rv
 
     def create_api_key(self, headers):
@@ -239,6 +240,192 @@ class APIKeyTestCase(BaseTestCase):
         )
         api_keys_2 = json.loads(rv.data.decode())['api_keys']
         self.assertEqual(len(api_keys_2), 2)
+
+
+class BookmarksTestCase(BaseTestCase):
+    # TODO: Fix these up a bit. messy.
+    def setUp(self):
+        super().setUp()
+        # Create a new user
+        password = '22John!Smith44'
+        rv = self.create_user(
+            'John Smith',
+            'jsmith22@me.com',
+            password
+        )
+        # Store user ID for later
+        user_id = json.loads(rv.data.decode())['user']['id']
+        # Create a user authorization header
+        user_auth_value = "{}:{}".format(user_id, password)
+        user_auth = base64.b64encode(user_auth_value.encode())
+        user_headers = {'Authorization': b'Basic ' + user_auth}
+        # Create and store new API Key
+        rv = self.create_api_key(headers=user_headers)
+        self.api_key = json.loads(rv.data.decode())['api_key']['id']
+        self.secret = json.loads(rv.data.decode())['api_key']['secret']
+        # Create an authorization header using API Key and Secret
+        auth_value = "{}:{}".format(self.api_key, self.secret)
+        auth = base64.b64encode(auth_value.encode())
+        # Store authorization header to instance
+        self.headers = {'Authorization': b'Basic ' + auth}
+
+    # Test for authorization when accessing bookmarks
+    def test_bookmark_auth_required(self):
+        # Test GET without authorization
+        rv = self.app.get('/bookmarks')
+        self.assertEqual(rv.status_code, 401)
+        # Test POST without authorization
+        rv = self.app.post('/bookmarks')
+        self.assertEqual(rv.status_code, 401)
+
+        # Create authorization header with invalid API Key
+        api_key = '12345'
+        secret = 'Secret'
+        # Create an authorization header using API Key and Secret
+        invalid_auth_value = "{}:{}".format(api_key, secret)
+        invalid_auth = base64.b64encode(invalid_auth_value.encode())
+        invalid_headers = {'Authorization': b'Basic ' + invalid_auth}
+        # Test GET with invalid API Key
+        rv = self.app.get(
+            '/bookmarks',
+            headers=invalid_headers
+        )
+        self.assertEqual(rv.status_code, 401)
+        # Test POST with wrong password
+        rv = self.app.post(
+            '/bookmarks',
+            headers=invalid_headers
+        )
+        self.assertEqual(rv.status_code, 401)
+
+        # Create authorization header with invalid Secret
+        api_key = self.api_key
+        secret = 'Secret'
+        # Create an authorization header using API Key and Secret
+        invalid_auth_value = "{}:{}".format(api_key, secret)
+        invalid_auth = base64.b64encode(invalid_auth_value.encode())
+        invalid_headers = {'Authorization': b'Basic ' + invalid_auth}
+        # Test GET with invalid API Key
+        rv = self.app.get(
+            '/bookmarks',
+            headers=invalid_headers
+        )
+        self.assertEqual(rv.status_code, 401)
+        # Test POST with wrong password
+        rv = self.app.post(
+            '/bookmarks',
+            headers=invalid_headers
+        )
+        self.assertEqual(rv.status_code, 401)
+
+    # Test for no bookmarks
+    def test_no_bookmarks(self):
+        rv = self.app.get(
+            '/bookmarks',
+            headers=self.headers)
+        self.assertIn(b'{\n  "bookmarks": []\n}\n', rv.data)
+
+    # Test to create bookmark
+    def test_add_bookmark(self):
+        # Create a bookmark that does not follow redirects
+        url = 'http://www.google.com'
+        rv = self.create_bookmark(url)
+        self.assertEqual(rv.status_code, 201)
+        self.assertIn(
+            b'"url": "http://www.google.com/"',
+            rv.data,
+            'Bookmark not created properly'
+        )
+
+    # Test to create bookmarks that follow redirects
+    def test_add_bookmark_follow_redirects(self):
+        # Create a bookmark that should follow redirects
+        url = 'http://google.com'
+        rv = self.create_bookmark(
+            url,
+            follow_redirects='True'
+        )
+        self.assertEqual(rv.status_code, 201)
+        self.assertIn(
+            b'"url": "http://www.google.com/"',
+            rv.data,
+            'Bookmark (follow_redirects) not created properly'
+        )
+
+    # Test add bookmark errors
+    def test_add_bookmark_errors(self):
+        # Check error when URL empty
+        rv = self.create_bookmark(None)
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'URL is required',
+            rv.data,
+            'Failed test when url is empty'
+        )
+        # Check error when url has HTTPError
+        rv = self.create_bookmark('http://google.com/testing')
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'404 Client Error',
+            rv.data,
+            'Failed test when url test has HTTPError'
+        )
+        # Check error when url has Timeout
+        rv = self.create_bookmark('http://github.com:81')
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'Timeout error. Please try again.',
+            rv.data,
+            'Failed test when url test has Timeout'
+        )
+        # Check error when url has Connection Error
+        rv = self.create_bookmark('http://googlecom')
+        self.assertEqual(rv.status_code, 400)
+        self.assertIn(
+            b'Could not connect to your url',
+            rv.data,
+            'Failed test when url test Connection Error'
+        )
+        # Check error when url has TooManyRedirects
+        # TODO: find way to simulate too many redirects error
+
+    # Test add and get bookmark
+    def test_add_and_get_bookmark(self):
+        # Create bookmark
+        rv = self.create_bookmark(
+            'http://google.com',
+            follow_redirects='True'
+        )
+        self.assertEqual(rv.status_code, 201, msg='Error creating bookmark')
+        # Store returned bookmark location
+        b_url = rv.headers['Location']
+        # Get bookmark
+        rv = self.app.get(b_url, headers=self.headers)
+        self.assertEqual(rv.status_code, 200, msg='Error retrieving bookmark')
+        bookmark = json.loads(rv.data.decode())['bookmark']
+        self.assertEqual(
+            bookmark['url'],
+            'http://www.google.com/',
+            'Bookmark get failed'
+        )
+
+    # Test bookmark retrieval errors
+    def test_get_bookmark_errors(self):
+        # Use incorrect bookmark id format
+        rv = self.app.get('/bookmarks/123', headers=self.headers)
+        self.assertEqual(rv.status_code, 400, msg='Incorrect status code')
+        self.assertIn(
+            b'Bookmark id must be 6 alphanumeric characters',
+            rv.data,
+            'Bookmark get error message is not correct'
+        )
+        # User bookmark id that does not exist
+        rv = self.app.get('/bookmarks/a1b2c3', headers=self.headers)
+        self.assertEqual(rv.status_code, 404, msg='Incorrect status code')
+        self.assertIn(
+            b'There is no bookmark with the id=a1b2c3',
+            rv.data,
+            'Bookmark get error message is not correct'
         )
 
 
