@@ -9,7 +9,7 @@ import bcrypt
 
 from bookmarks_service import app
 from bookmarks_service.database import db_session
-from bookmarks_service.models import User, Bookmark, API_Key
+from bookmarks_service.models import User, SuperUser, Bookmark, API_Key
 
 # Create user agent for requests
 USER_AGENT = '{}/{}'.format(
@@ -78,6 +78,45 @@ def is_authorized(f):
                 error='Unauthorized', code='401',
                 message='You are not authorized to access this route'
             ), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def super_auth_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            auth = request.authorization
+            super_user_id = request.authorization['username']
+            password = request.authorization['password']
+        # Catches exception if there is no authorization header or not
+        # formatted as basic authorization
+        except TypeError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a proper authorization header'
+            ), 401
+        # Catches exception if authorization header does not include username
+        # and password
+        except KeyError as e:
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must include a valid username and password'
+            ), 401
+        super_user = SuperUser.query.get(super_user_id)
+        # Check that user exists and secret matches api_key secret
+        if not (
+            super_user and bcrypt.checkpw(
+                password.encode('utf-8'),
+                super_user.password_hash.encode('utf-8')
+                )):
+            return jsonify(
+                error='Unauthorized', code='401',
+                message='You must be authenticated to access'
+            ), 401
+        # Store user
+        g.super_user = super_user
+        # Continue with function
         return f(*args, **kwargs)
     return decorated_function
 
@@ -251,6 +290,7 @@ def single_bookmark(bookmark_id):
 
 
 @app.route('/users', methods=['GET', 'POST'])
+@super_auth_required
 def users():
     if request.method == 'POST':
         # Get data
@@ -295,8 +335,7 @@ def users():
 
 
 @app.route('/users/<user_id>', methods=['GET'])
-@login_required
-@is_authorized
+@super_auth_required
 def single_user(user_id):
     # Query users
     user = User.query.get(user_id)
