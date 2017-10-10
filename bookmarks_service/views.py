@@ -3,7 +3,7 @@ import re
 import string
 from functools import wraps
 
-from flask import g, abort, jsonify, make_response, request
+from flask import g, abort, jsonify, make_response, render_template, request
 import requests
 import bcrypt
 
@@ -187,20 +187,7 @@ def verify_bookmark(f):
 
 @app.route('/', methods=['GET'])
 def front_page():
-    return (
-        'Welcome to the bookmarks web service API. \n'
-        'With this API, you can create store URLs in a (somewhat) '
-        'shortened version.\n'
-        'To create an account, make a POST request to "/users", passing '
-        '"name" and "email".\n'
-        'The response will include a "user_id". Save this.\n'
-        'To create a bookmark, make a POST request to "/bookmarks", passing '
-        'a "url" and "user_id". If you want to follow redirects, include the '
-        'key "follow_redirects" with the value "True".\n'
-        'The response will include an id, which you can use to access this '
-        'url. Just make a GET request to "bookmarks/\{id\}", where \{id\} '
-        'is the bookmark id you want to retrieve.'
-    )
+    return render_template('front_page.html')
 
 
 @app.route('/bookmarks', methods=['GET', 'POST'])

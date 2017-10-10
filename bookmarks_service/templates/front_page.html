@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Bookmarks Web Service</title>
+  </head>
+  <body>
+    <p>
+      Welcome to the Bookmarks Web Service, a bookmarking and
+      and link shortening web service with REST API endpoints.
+    </p>
+    <p>
+      With this web service, users can save URLs to bookmark IDs
+      (unique, random 6 character alphanumeric sequences). Users can access
+      the saved URL by making a request to the saved bookmark\'s
+      endpoint.
+    </p>
+    <p>
+      To create an account, please email the administrator:
+      <a href="mailto:{{config['ADMIN_EMAIL']}}">{{ config['ADMIN_EMAIL'] }}</a>.
+    </p>
+    <p>
+      Once you receive your User ID and password, you will be able to
+      create an API Key, which you can use to create and access bookmarks.
+    </p>
+    <p>
+      Please refer to the
+      <a href="https://github.com/byanofsky/bookmarks-service/API.md">API documentation</a>.
+    </p>
+  </body>
+</html>

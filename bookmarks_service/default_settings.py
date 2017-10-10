@@ -4,6 +4,8 @@ import pkg_resources  # part of setuptools
 # Get environment, or set to development by default
 app_env = os.environ.get('APPLICATION_ENVIRONMENT') or 'development'
 
+# Email address displayed for user to email
+ADMIN_EMAIL = ''  # TODO: Enter your admin email address
 # User agent name for requests
 USER_AGENT_NAME = 'bookmarks_service'  # TODO: Enter user agent name
 # Version number taken from setup.py
