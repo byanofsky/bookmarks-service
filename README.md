@@ -21,7 +21,7 @@ Then, use the returned bookmark `id`, to make a GET request to `/bookmarks/yw6i0
 
 ## Getting Started (After Installation)
 
-Looking for installation instructions? [Skip to the installation section](#Installation), then come back here.
+Looking for installation instructions? [Skip to the installation section](#installation), then come back here.
 
 Looking for API documentation? [Find them here](/API.md).
 
