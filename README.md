@@ -4,6 +4,8 @@ A bookmarking and link shortening web service with REST API endpoints.
 
 ## What It Does
 
+See working example here: https://bookmarks-service.herokuapp.com.
+
 Allows users to save URLs to bookmark IDs (unique, random 6 character alphanumeric sequence). Users can access the saved URL by making a request to the saved bookmark's endpoint.
 
 For instance, making a POST request to `/bookmarks`, passing the `url: 'http://google.com'` in the form data, will yield a bookmark ID (for instance, `"id": "yw6i08"`).
